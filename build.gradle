@@ -1,0 +1,133 @@
+plugins {
+	id 'groovy'
+	id 'org.springframework.boot' version '2.1.4.RELEASE'
+	id 'java-library'
+	id 'maven-publish'
+	id 'com.github.spotbugs' version '1.7.1'
+	id 'checkstyle'
+	id 'jacoco'
+}
+
+spotbugs {
+  toolVersion = '3.1.12'
+	ignoreFailures = true
+}
+
+
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
+	reports {
+		xml.enabled = false
+		html.enabled = true
+	}
+}
+
+checkstyle {
+	//http://checkstyle.sourceforge.net/
+	//toolVersion '7.8.1'
+	ignoreFailures = true
+}
+
+tasks.withType(Checkstyle) {
+	reports {
+		xml.enabled = true
+		html.enabled = true
+	}
+}
+
+jacoco {
+  toolVersion = "0.8.3"
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+// Set the project information
+group = 'com.openecs.assets'
+version = '1.0.0'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+
+// Expose the build information such as project name, version etc
+springBoot {
+  buildInfo()
+}
+
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	implementation 'io.micrometer:micrometer-registry-prometheus:latest.release'
+	implementation 'io.springfox:springfox-swagger2:latest.release'
+	implementation 'io.springfox:springfox-swagger-ui:latest.release'	
+  implementation 'com.h2database:h2'		
+
+	// Uses for auto change detection and auto build
+	runtimeOnly 'org.springframework.boot:spring-boot-devtools'
+
+  //Json Utility Libraries
+	//https://github.com/FasterXML/jackson-core
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
+	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.8'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+	implementation 'com.jayway.jsonpath:json-path:2.4.0'	
+
+	//Spring Boot and JUnit Testing
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+	reports {
+		junitXml.enabled = false
+		html.enabled = true		
+	}
+	ignoreFailures = true              
+}
+
+// Create a zip package
+task zip(type: Zip, dependsOn: 'bootJar') {
+	from (tasks.jar.archivePath) {
+		into 'lib'
+	}
+	from ('bin/') {
+		into 'bin'
+	}
+	from ('data/') {
+		into 'data'
+	}
+}
+
+// Upload a release to the repository
+task releases ( dependsOn: "zip" ) {
+	// Can set enviornment variables in ~/.bashrc
+	def githubApiKey = System.getenv('GITHUB_API_KEY')
+	def githubUserId = System.getenv('GITHUB_USER_ID')
+	
+	println "Upload to GitHub"		
+}
+
+task tag ( dependsOn: "zip" ) {
+	// Github API
+	// https://developer.github.com/v3/
+	
+	println 'Create a release'
+	def release = "{ 'tag_name': '1.0.0', 'target_commitish': 'master', 'name': '1.0.0', 'body': 'Release 1.0.0', 'draft': false, 'prerelease': false }"
+
+  //POST /repos/:owner/:repo/releases
+	//EX: curl -X POST -u openecs --data '{"tag_name": "1.0.0"}' https://api.github.com/repos/mpt-bootcamp/assets-manager/releases
+	exec {
+		executable = "curl"
+		args = [ "-X POST",
+			"https://api.github.com/repos/mpt-bootcamp/assets-manager/releases",
+			"-d", "${release}"
+		]
+	}
+
+  // From above output
+	// "upload_url": "https://uploads.github.com/repos/mpt-bootcamp/assets-manager/releases/17162634/assets{?name,label}",
+}
+

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <th:block th:replace="layouts/default :: common-links"></th:block>
+  <title>Page Template</title>  
+</head>
+
+<body class="app header-fixed">
+    <header th:replace="layouts/default :: navbar" class="app-header"></header>
+  
+    <!-- application body start -->   
+    <div class="app-body">
+      <div class="sidebar"></div>
+      
+      <!-- main content start -->
+      <main class="main">  
+        <div class="container-fluid">
+
+            
+        </div>
+      </main>
+      <!-- main content end -->
+
+      <aside class="aside-menu"></aside>
+    </div>
+    <!-- application body end --> 
+      
+    <footer th:replace="layouts/default :: footer" class="app-footer"></footer>
+
+    <th:block th:replace="layouts/default :: scripts"></th:block>
+   
+  </body>
+
+</html>
+
+
